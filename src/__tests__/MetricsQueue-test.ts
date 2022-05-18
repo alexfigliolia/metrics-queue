@@ -119,9 +119,9 @@ describe("Metrics Queue:", () => {
       performance.mark("example-mark");
       const measure = performance.measure("example-measure", "example-mark");
       await new Promise((process as any).nextTick);
-      const [perfMeasure, params] = onMeasure.mock.calls[0] as MeasureParameters;
+      const [perfMeasure, params] = onMeasure.mock.calls[0];
       expect(perfMeasure).toEqual(measure);
-      const [measureName, markName] = params;
+      const [measureName, markName] = params as PerformanceMeasureParameters;
       expect(measureName).toEqual("example-measure");
       expect(markName).toEqual("example-mark");
       expect(bustQueue).toHaveBeenCalledWith(measure, "example-measure", "example-mark");
