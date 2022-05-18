@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "The Metrics Queue allows developers to react performance.marks and measures for the purpose of performance-tuning against performance goals",
   "main": "lib/index.js",
-  "types": "lib/types.d.ts",
+  "types": "types/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib",
+    "types",
+    "src"
   ],
+  "sideEffects": false,
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
@@ -15,7 +18,8 @@
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags",
-    "test": "jest --config jestconfig.json"
+    "test": "jest --config jestconfig.json",
+    "test:coverage": "jest --config jestconfig.json --coverage"
   },
   "repository": {
     "type": "git",
@@ -58,5 +62,14 @@
   "dependencies": {},
   "browserslist": [
     "defaults"
+  ],
+  "npmName": "metrics-queue",
+  "npmFileMap": [
+    {
+      "basePath": "/lib/",
+      "files": [
+        "*.js"
+      ]
+    }
   ]
 }

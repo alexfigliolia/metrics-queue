@@ -1,6 +1,6 @@
 import { MetricsQueue } from "../MetricsQueue";
 import { MetricIndexer } from "../MetricIndexer";
-import type { MeasureParameters, PerformanceMarkParameters, PerformanceMeasureParameters } from "../types";
+import type { PerformanceMarkParameters, PerformanceMeasureParameters } from "../types";
 
 Object.defineProperty(window, "performance", {
   writable: true,
