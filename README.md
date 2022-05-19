@@ -10,7 +10,7 @@ The idea behind the Metrics Queue is to deliver the fastest possible user experi
 
 1. Adapt to your metrics at runtime
 2. Create explicit routines for high vs. low performance scenarios
-3. Explicitely defer expersive tasks behind high-priority operations
+3. Explicitly defer expensive tasks behind high-priority operations
 4. Create task execution phases based on the needs of your product
 
 #### Let's talk getting setup:
@@ -89,9 +89,35 @@ MetricsQueue.addEventListener("example-mark", (performanceMark, ...markOptions) 
 });
 ```
 
-##### You're all set.
+Similar to native `eventListeners` in the browser `MetricsQueue.addEventListener` accepts an optional configuration object to go along with your `event-name` and `callback`:
 
-If you'd like to see a bit more of the API or usage examples, please read on:
+```JavaScript
+const ID = MetricsQueue.addEventListener("event-name", callback, {
+  passive: true,
+  /*
+    Tells the MetricsQueue to run the callback after the current 
+    callstack has cleared. This can be ideal in situations where
+    callbacks don't need to be "blocking". 
+    
+    Callbacks by default, will process asynchronously. This can be 
+    set to false when executing high-priority tasks in your callbacks
+  */
+  keepAlive: false
+  /*
+    Tells the MetricsQueue that this event listener should not be 
+    removed after it's called. When keepAlive is true, your callback
+    will run each time the corresponding metric is reached - similar
+    to that of a "click" event-handler on the DOM.
+    
+    When using keepAlive = true, eventListeners can be manually 
+    removed using:
+
+    MetricsQueue.removeEventListener("event-name", ID);
+  */
+});
+```
+If the Performance API is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes). If you are using an external or proprietary library for recording your metrics, the next section is for you.
+
 
 #### Let's talk about other Performance Libraries
 
@@ -121,7 +147,7 @@ Creating entries on the plugins object tells the MetricsQueue to do the followin
 1. Expose the `onProprietaryEvent` method. You'll invoke this method whenever a metric from your performance library completes
 2. The `processAfterCallStack` option tells the `MetricsQueue` to execute all your event listeners _after_ the current callstack has cleared. This allows for your callbacks to be non-blocking
 
-Let's look at a working example using a fictionary performance library:
+Let's look at a working example using a fictional performance library:
 
 ```JavaScript
 import { MetricsQueue } from "metrics-queue";
@@ -168,7 +194,7 @@ MetricsQueue.addEventListener("my-metric", (PerfMetric) => {
 });
 ```
 
-#### Some Example Recipes:
+### Some Example Recipes:
 
 1. Run a lighter-weight process when performance is below a certain thresholds:
 
@@ -206,7 +232,7 @@ MetricsQueue.addEventListener("first-meaningful-paint", FMP => {
 const measure = performance.measure("interactivity", "some-start-mark");
 
 // In any other module
-import { MetricSubscriber } from "metrics-queue";
+import { MetricsQueue } from "metrics-queue";
 
 // Any UI library:
 export const AwesomeComponent = () => {
@@ -234,18 +260,18 @@ export const AwesomeComponent = () => {
 // Somewhere in your application code
 import { createMetric } from "my-custom-metric-lib";
 
-export const customMetric = createMetric("custom-metric");
+const customMetric = createMetric("custom-metric");
 
 // When your metric is reached
-EXAMPLE_METRIC.onComplete(() => {
-    MetricsQueue.plugins.onCustomMetric("custom-metric", customMetric);
+customMetric.onComplete(() => {
+  MetricsQueue.plugins.onCustomMetric("custom-metric", customMetric);
 });
 
 // In any other module
-import { MetricSubscriber } from "metrics-queue";
+import { MetricsQueue } from "metrics-queue";
 
-MetricsQueue.addEventListener("custom-metric", metricInstance => {
-  if(metricInstance.stopTime < 500) {
+MetricsQueue.addEventListener("custom-metric", customMetric => {
+  if(customMetric.stopTime < 500) {
     // If the user experienced a fast execution for example-metric,
     // lets preload an additional feature that would normally require
     // a certain user interaction before loading
@@ -264,6 +290,7 @@ Feel free to submit PR's with more routines that worked for your project!
 
 Frontend teams everywhere trade features for performance on a day-to-day basis. As such, we dedicate ourselves to techniques such as code-splitting, serverside rendering, aggressive caching, and code compression - all, so we can have our cake, and eat it too.
 
-If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accomodate company goals or product features.
+If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate company goals or product features.
 
-In my own case, the need arrose to definitively defer task execution behind performance measurements that were tracked by my team. The need for such granularity is what inspired the `MetricsQueue`.
+In my own case, the need arose to definitively defer task execution behind performance measurements that were tracked by my team. The need for such granularity is what inspired the `MetricsQueue`.
+

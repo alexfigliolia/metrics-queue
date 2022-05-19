@@ -214,7 +214,6 @@ export class MetricsQueue {
    *               It is false by default.                      
    */
   public static addEventListener(event: string, callback: Listener, config?: ListenerConfig) {
-    // TODO - document usage in readme
     if (this.isDev) {
       this.validateListener(event, callback, config);
     }
