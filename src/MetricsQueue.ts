@@ -1,5 +1,6 @@
 import { MetricIndexer } from "./MetricIndexer";
 import type {
+  Listener,
   HashTable,
   InitConfig,
   PluginOptions,
@@ -21,13 +22,13 @@ import type {
  * metrics.
  */
 export class MetricsQueue {
-  private static isDev: boolean = false;
-  public static enabled: boolean = false;
-  private static usePerformanceAPI: boolean = true;
+  private static isDev = false;
+  public static enabled = false;
+  private static usePerformanceAPI = true;
   private static mark: null | typeof performance.mark = null;
   private static measure: null | typeof performance.measure = null;
   private static emitter: HashTable<MetricIndexer> = {};
-  public static plugins: HashTable<Function> = {};
+  public static plugins: HashTable<(...args: any[]) => void> = {};
 
   /**
    * Enable the MetricsQueue, do it once and fuggettaboutit
@@ -60,6 +61,7 @@ export class MetricsQueue {
     for (const plug in plugins) {
       const { processAfterCallStack } = plugins[plug];
       if (processAfterCallStack) {
+        // eslint-disable-next-line arrow-body-style
         this.plugins[plug] = (...args: [metric: string, ...args: any[]]) => {
           return this.processAfterCallStack(this.onPluginEvent.bind(this, ...args));
         };
@@ -80,13 +82,13 @@ export class MetricsQueue {
     // Execute the default behavior, first, always
     let performanceMark: null | PerformanceMark = null;
     MetricsQueue.safetyWrap(() => {
-      performanceMark = MetricsQueue.mark!.apply(this, args);
+      performanceMark = MetricsQueue.mark?.apply(this, args) ?? null;
     });
     // Allow performance.mark to return the mark before any registered
     // callbacks are called
     void MetricsQueue.processAfterCallStack(() => {
       // Emit the onMark event for the metric reached
-      MetricsQueue.onMark(performanceMark!, args);
+      MetricsQueue.onMark(performanceMark, args);
     });
     // Return the default PerformanceMark
     return performanceMark;
@@ -104,13 +106,13 @@ export class MetricsQueue {
     // Execute the default behavior, first, always
     let performanceMeasure: null | PerformanceMeasure = null;
     MetricsQueue.safetyWrap(() => {
-      performanceMeasure = MetricsQueue.measure!.apply(this, args as unknown as PerformanceMeasureParameters);
+      performanceMeasure = MetricsQueue.measure?.apply(this, args) ?? null;
     });
     // Allow performance.measure to return the measure before any
     // registered callbacks are called
     void MetricsQueue.processAfterCallStack(() => {
       // Emit the onMeasure event for the metric reached
-      MetricsQueue.onMeasure(performanceMeasure!, args as unknown as PerformanceMeasureParameters);
+      MetricsQueue.onMeasure(performanceMeasure, args);
     });
     // Return the default PerformanceMeasure
     return performanceMeasure;
@@ -121,9 +123,9 @@ export class MetricsQueue {
    * * For internal use only
    *
    * @param {object | undefined} options - the options of a performance.mark
-   * @param {PerformanceMark | null} performanceMark - the return value of the performance.mark
+   * @param {PerformanceMark} performanceMark - the return value of the performance.mark
    */
-  private static onMark(performanceMark: PerformanceMark, performanceMarkParams: PerformanceMarkParameters) {
+  private static onMark(performanceMark: PerformanceMark | null, performanceMarkParams: PerformanceMarkParameters) {
     const [markName] = performanceMarkParams;
     if (markName in this.emitter) {
       this.emitter[markName].bust(performanceMark, ...performanceMarkParams);
@@ -139,7 +141,7 @@ export class MetricsQueue {
    * @param {performanceMeasureParams} performanceMeasure - the options passed performance.measure
    */
   private static onMeasure(
-    performanceMeasure: PerformanceMeasure,
+    performanceMeasure: PerformanceMeasure | null,
     performanceMeasureParams: PerformanceMeasureParameters
   ) {
     const [measureName] = performanceMeasureParams;
@@ -181,13 +183,9 @@ export class MetricsQueue {
    *
    * @param {Function} callback - anything but ideally limited to O(n) or less
    */
-  private static async processAfterCallStack(callback: Function) {
-    try {
-      await Promise.resolve();
-      return callback();
-    } catch (error) {
-      throw error;
-    }
+  private static async processAfterCallStack(callback: () => any) {
+    await Promise.resolve();
+    return callback();
   }
 
   /**
@@ -200,7 +198,7 @@ export class MetricsQueue {
    *                              register listeners on events that are designed called multiple
    *                              times
    */
-  public static addEventListener(event: string, callback: Function, keepAlive?: boolean) {
+  public static addEventListener(event: string, callback: Listener, keepAlive?: boolean) {
     if (this.isDev) {
       this.validateListener(event, callback, keepAlive);
     }
@@ -259,10 +257,10 @@ export class MetricsQueue {
    * @param {any[]} args - arguments to apply to the function
    * @param {Function} catchFN - an optional handler for caught errors
    */
-  public static safetyWrap(func: Function, args: any[] = [], catchFN?: Function) {
+  public static safetyWrap(func: (...args: any[]) => any, args: any[] = [], catchFN?: (error: unknown) => any) {
     try {
       return func(...args);
-    } catch (e) {
+    } catch (e: unknown) {
       // Suppress error when performance API failed.
       // Note: in MicrosoftEdge version 18 and prior, performance.measure(name, startMark, endMark) API will throw SyntaxError if startMark is undefined.
       // That's why wrap with try catch statement.

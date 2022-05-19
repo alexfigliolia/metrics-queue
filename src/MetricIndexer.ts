@@ -1,5 +1,5 @@
 import { AutoIncrementingID } from "./AutoIncrementingID";
-import type { MetricEvent, BustPluginMetric, BustPerformanceMark, BustPerformanceMeasure } from "./types";
+import type { Listener, MetricEvent, BustPluginMetric, BustPerformanceMark, BustPerformanceMeasure } from "./types";
 
 /**
  * Metric Indexer
@@ -12,7 +12,7 @@ import type { MetricEvent, BustPluginMetric, BustPerformanceMark, BustPerformanc
 
 export class MetricIndexer {
   private queue = new Map<string, MetricEvent>();
-  private silenceWarnings: boolean = false;
+  private silenceWarnings = false;
 
   /**
    * Add and index an event listener callback
@@ -20,7 +20,7 @@ export class MetricIndexer {
    * @param {Function} listener - a callback
    * @returns {string}
    */
-  public add(listener: Function, keepAlive: boolean = false) {
+  public add(listener: Listener, keepAlive = false) {
     const nextID = AutoIncrementingID.nextID.toString();
     this.queue.set(nextID, { listener, keepAlive });
     return nextID;

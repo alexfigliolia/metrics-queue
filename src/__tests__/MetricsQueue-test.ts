@@ -1,6 +1,7 @@
 import { MetricsQueue } from "../MetricsQueue";
 import { MetricIndexer } from "../MetricIndexer";
-import type { PerformanceMarkParameters, PerformanceMeasureParameters } from "../types";
+import { PerfLibMetric } from "../testUtils";
+import type { Listener, PerformanceMarkParameters, PerformanceMeasureParameters } from "../types";
 
 Object.defineProperty(window, "performance", {
   writable: true,
@@ -17,7 +18,7 @@ describe("Metrics Queue:", () => {
     MetricsQueue.destroy();
   });
 
-  it("It initializes with default property values", () => {
+  it("Initializes with default property values", () => {
     expect(MetricsQueue.enabled).toEqual(false);
     expect(MetricsQueue["mark"]).toEqual(null);
     expect(MetricsQueue["measure"]).toEqual(null);
@@ -26,12 +27,12 @@ describe("Metrics Queue:", () => {
   });
 
   describe("Init:", () => {
-    it("It marks MetricsQueue.enabled as true allowing it to receive event listeners", () => {
+    it("marks MetricsQueue.enabled as true allowing it to receive event listeners", () => {
       MetricsQueue.init();
       expect(MetricsQueue.enabled).toEqual(true);
     });
 
-    it("It caches the original mark and measure methods of the Performance API when MetricsQueue.usePerformanceAPI is true and the API is available on the window", () => {
+    it("Caches the original mark and measure methods of the Performance API when MetricsQueue.usePerformanceAPI is true and the API is available on the window", () => {
       const mark = performance.mark;
       const measure = performance.measure;
       MetricsQueue.init();
@@ -39,13 +40,13 @@ describe("Metrics Queue:", () => {
       expect(MetricsQueue["measure"]).toEqual(measure);
     });
 
-    it("It adds a middleware to the mark and measure methods Performance API when MetricsQueue.usePerformanceAPI is true and the API is available on the window", () => {
+    it("Adds a middleware to the mark and measure methods Performance API when MetricsQueue.usePerformanceAPI is true and the API is available on the window", () => {
       MetricsQueue.init();
       expect(performance.mark).toEqual(MetricsQueue["markMiddleware"]);
       expect(performance.measure).toEqual(MetricsQueue["measureMiddlware"]);
     });
 
-    it("It leaves the PerformanceAPI in tact when initializing with MetricsQueue.usePerformanceAPI equal to false", () => {
+    it("Leaves the PerformanceAPI in tact when initializing with MetricsQueue.usePerformanceAPI equal to false", () => {
       MetricsQueue.init({
         usePerformanceAPI: false,
       });
@@ -54,17 +55,23 @@ describe("Metrics Queue:", () => {
       expect(MetricsQueue["mark"]).toEqual(null);
       expect(MetricsQueue["measure"]).toEqual(null);
     });
+
+    it("When supplied with an 'onReady' function it will call it when initializing", () => {
+      const onReady = jest.fn();
+      MetricsQueue.init({ onReady });
+      expect(onReady).toHaveBeenCalledWith(MetricsQueue);
+    });
   });
 
   describe("Mark Middleware:", () => {
-    it("It executes the default performance.mark behavior", () => {
+    it("Executes the default performance.mark behavior", () => {
       MetricsQueue.init();
       const cachedMark = jest.spyOn(MetricsQueue as any, "mark");
       performance.mark("example-mark");
       expect(cachedMark).toHaveBeenCalledWith("example-mark");
     });
 
-    it("It emits the onMark event after running the default performance.mark behavior", async () => {
+    it("Emits the onMark event after running the default performance.mark behavior", async () => {
       MetricsQueue.init();
       const onMark = jest.spyOn(MetricsQueue as any, "onMark");
       const mark = performance.mark("example-mark");
@@ -74,7 +81,7 @@ describe("Metrics Queue:", () => {
       expect((params as PerformanceMarkParameters)[0]).toEqual("example-mark");
     });
 
-    it("It busts the queue of events listening for example-mark", async () => {
+    it("Busts the queue of events listening for example-mark", async () => {
       MetricsQueue.init();
       const listenerSpy = jest.fn();
       const markSpy = jest.spyOn(MetricsQueue as any, "onMark");
@@ -92,14 +99,14 @@ describe("Metrics Queue:", () => {
   });
 
   describe("Measure Middleware:", () => {
-    it("It executes the default performance.measure behavior", () => {
+    it("Executes the default performance.measure behavior", () => {
       MetricsQueue.init();
       const cachedMeasure = jest.spyOn(MetricsQueue as any, "measure");
       performance.measure("example-measure");
       expect(cachedMeasure).toHaveBeenCalledWith("example-measure");
     });
 
-    it("It emits the onMeasure event after running the default performance.measure behavior", async () => {
+    it("Emits the onMeasure event after running the default performance.measure behavior", async () => {
       MetricsQueue.init();
       const onMeasure = jest.spyOn(MetricsQueue as any, "onMeasure");
       performance.mark("example-mark");
@@ -111,7 +118,7 @@ describe("Metrics Queue:", () => {
       expect((params as PerformanceMeasureParameters)[1]).toEqual("example-mark");
     });
 
-    it("It busts the queue of events listening for example-measure", async () => {
+    it("Busts the queue of events listening for example-measure", async () => {
       MetricsQueue.init();
       MetricsQueue.addEventListener("example-measure", () => {});
       const onMeasure = jest.spyOn(MetricsQueue as any, "onMeasure");
@@ -130,7 +137,7 @@ describe("Metrics Queue:", () => {
   });
 
   describe("On Mark:", () => {
-    it("It should bust the queue when event listeners are present for the mark", async () => {
+    it("Should bust the queue when event listeners are present for the mark", async () => {
       MetricsQueue.init();
       MetricsQueue.addEventListener("example-mark", () => {});
       const bustQueue = jest.spyOn(MetricsQueue["emitter"]["example-mark"], "bust");
@@ -141,7 +148,7 @@ describe("Metrics Queue:", () => {
   });
 
   describe("On Measure:", () => {
-    it("It should bust the queue when event listeners are present for the measure", async () => {
+    it("Should bust the queue when event listeners are present for the measure", async () => {
       MetricsQueue.init();
       const listenerSpy = jest.fn();
       const measureSpy = jest.spyOn(MetricsQueue as any, "onMeasure");
@@ -159,27 +166,6 @@ describe("Metrics Queue:", () => {
   });
 
   describe("Integration with external libraries:", () => {
-    class PerfLibMetric {
-      name: string;
-      time: number = 0;
-      callbacks: Function[] = [];
-      constructor(name: string) {
-        this.name = name;
-      }
-      stop() {
-        this.time = Date.now();
-        this.onStop();
-      }
-      onStop() {
-        this.callbacks.forEach((callback) => {
-          callback(this);
-        });
-      }
-      subscribe(func: Function) {
-        this.callbacks.push(func);
-      }
-    }
-
     beforeEach(() => {
       MetricsQueue.init({
         plugins: {
@@ -190,7 +176,7 @@ describe("Metrics Queue:", () => {
       });
     });
 
-    it("It should register a callable on the MetricsQueue's plugins", () => {
+    it("Should register a callable on the MetricsQueue's plugins", () => {
       expect(typeof MetricsQueue.plugins.onPerformanceLibraryEvent).toEqual("function");
     });
 
@@ -218,7 +204,7 @@ describe("Metrics Queue:", () => {
       expect(callback).toHaveBeenCalledWith("event", {}, "stuff");
     });
 
-    it("It should bust the queue when event listeners are present for declared plugins", () => {
+    it("Should bust the queue when event listeners are present for declared plugins", () => {
       const metric = new PerfLibMetric("example-metric");
       metric.subscribe((instance: PerfLibMetric) => {
         MetricsQueue.plugins.onPerformanceLibraryEvent(instance.name, instance);
@@ -237,7 +223,7 @@ describe("Metrics Queue:", () => {
       expect(MetricsQueue["emitter"]["example-metric"]).toEqual(undefined);
     });
 
-    it("It should do nothing when listeners are registered on an event", async () => {
+    it("Should do nothing when listeners are registered on an event", async () => {
       const metric = new PerfLibMetric("example-metric");
       metric.subscribe((...args: [name: string, time: number]) => {
         MetricsQueue.plugins.onPerformanceLibraryEvent(...args);
@@ -249,28 +235,17 @@ describe("Metrics Queue:", () => {
   });
 
   describe("Process After Call Stack", () => {
-    it("It defers callback execution until after the callstack is cleared", async () => {
+    it("Defers callback execution until after the callstack is cleared", async () => {
       const func = jest.fn();
       void MetricsQueue["processAfterCallStack"](func);
       expect(func).toHaveBeenCalledTimes(0);
       await new Promise((process as any).nextTick);
       expect(func).toHaveBeenCalledTimes(1);
     });
-
-    it("It throws errors caused by failing callbacks", async () => {
-      const func = () => {
-        throw new Error("Error");
-      };
-      try {
-        await MetricsQueue["processAfterCallStack"](func);
-      } catch (error) {
-        expect(error).toEqual(new Error("Error"));
-      }
-    });
   });
 
   describe("Add Event Listener:", () => {
-    it("It should initialize a MetricIndexer on the emitter for the first event registered", () => {
+    it("Should initialize a MetricIndexer on the emitter for the first event registered", () => {
       MetricsQueue.init();
       expect(MetricsQueue["emitter"]).toEqual({});
       const callback = () => {};
@@ -280,7 +255,7 @@ describe("Metrics Queue:", () => {
       expect(MetricsQueue["emitter"]["time-to-interactive"].size).toEqual(1);
     });
 
-    it("It should push a callback to a pre-existing MetricIndexer when subsequent listeners are added", () => {
+    it("Should push a callback to a pre-existing MetricIndexer when subsequent listeners are added", () => {
       MetricsQueue.init();
       expect(MetricsQueue["emitter"]).toEqual({});
       const callback = () => {};
@@ -289,7 +264,7 @@ describe("Metrics Queue:", () => {
       expect(MetricsQueue["emitter"]["time-to-interactive"].size).toEqual(2);
     });
 
-    it("It should validate event listeners when the environment is not production", () => {
+    it("Should validate event listeners when the environment is not production", () => {
       const env = process.env.NODE_ENV;
       process.env.NODE_ENV = "dev";
       MetricsQueue.init();
@@ -300,7 +275,7 @@ describe("Metrics Queue:", () => {
       process.env.NODE_ENV = env;
     });
 
-    it("It not should validate event listeners when the environment is production", () => {
+    it("Should not validate event listeners when the environment is production", () => {
       process.env.NODE_ENV = "production";
       MetricsQueue.init();
       const validate = jest.spyOn(MetricsQueue as any, "validateListener");
@@ -309,7 +284,7 @@ describe("Metrics Queue:", () => {
       process.env.NODE_ENV = "testing";
     });
 
-    it("It should run a chubbiness when adding an event listener to a preexisting queue in non-production environments", () => {
+    it("Should run a chubbiness when adding an event listener to a preexisting queue in non-production environments", () => {
       MetricsQueue.init();
       MetricsQueue.addEventListener("example-mark", () => {});
       const chubbinessCheck = jest.spyOn(MetricsQueue["emitter"]["example-mark"], "chubbinessCheck");
@@ -317,7 +292,7 @@ describe("Metrics Queue:", () => {
       expect(chubbinessCheck).toHaveBeenCalledWith("example-mark");
     });
 
-    it("It should not run a chubbiness when adding an event listener to a preexisting queue in production environments", () => {
+    it("Should not run a chubbiness when adding an event listener to a preexisting queue in production environments", () => {
       process.env.NODE_ENV = "production";
       MetricsQueue.init();
       MetricsQueue.addEventListener("example-mark", () => {});
@@ -333,33 +308,33 @@ describe("Metrics Queue:", () => {
       MetricsQueue.init();
     });
 
-    it("It returns true if the listener was not already executed", () => {
+    it("Returns true if the listener was not already executed", () => {
       const ID = MetricsQueue.addEventListener("example-mark", () => {});
       const removed = MetricsQueue.removeEventListener("example-mark", ID);
       expect(removed).toEqual(true);
     });
 
-    it("It returns null if the listener was already removed", () => {
+    it("Returns null if the listener was already removed", () => {
       const ID = MetricsQueue.addEventListener("example-mark", () => {});
       MetricsQueue.removeEventListener("example-mark", ID);
       const removed = MetricsQueue.removeEventListener("example-mark", ID);
       expect(removed).toEqual(null);
     });
 
-    it("It returns null if the attempted removal doesn't exist", async () => {
+    it("Returns null if the attempted removal doesn't exist", async () => {
       const removed = MetricsQueue.removeEventListener("example-mark", "123");
       expect(removed).toEqual(null);
     });
   });
 
   describe("Validate Listener:", () => {
-    it("It should throw an error when the Metrics Queue is not enabled and an event listener is added", () => {
+    it("Should throw an error when the Metrics Queue is not enabled and an event listener is added", () => {
       expect(() => {
         MetricsQueue.addEventListener("example-mark", () => {});
       }).toThrow("Please initialize the Metrics Queue before registering performance listeners");
     });
 
-    it("It should throw an error when an event is not provided", () => {
+    it("Should throw an error when an event is not provided", () => {
       MetricsQueue.init();
       expect(() => {
         MetricsQueue.addEventListener(undefined as unknown as string, () => {});
@@ -368,16 +343,16 @@ describe("Metrics Queue:", () => {
       );
     });
 
-    it("It should throw an error when a callback is not provided", () => {
+    it("Should throw an error when a callback is not provided", () => {
       MetricsQueue.init();
       expect(() => {
-        MetricsQueue.addEventListener("example-event", "not a function" as unknown as Function);
+        MetricsQueue.addEventListener("example-event", "not a function" as unknown as Listener);
       }).toThrow(
         "To register a listener, please provide a callback function to be executed once your metric is reached"
       );
     });
 
-    it("It should throw no errors when a valid event and callback are provided - and when the MetricsQueue is initialized", () => {
+    it("Should throw no errors when a valid event and callback are provided - and when the MetricsQueue is initialized", () => {
       MetricsQueue.init();
       expect(() => {
         MetricsQueue.addEventListener("example-event", () => {});
@@ -392,18 +367,28 @@ describe("Metrics Queue:", () => {
       expect(returnValue).toEqual("hello");
     });
 
-    it("It catches and returns null when the passed function throws", () => {
-      const func = (args: IArguments) => {
+    it("Catches and returns null when the passed function throws", () => {
+      const func = (args: IArguments) =>
         // force function to throw
-        return (args as any).keyDoesntExist.thisAlsoDoesntExist;
-      };
+        (args as any).keyDoesntExist.thisAlsoDoesntExist;
       const returnValue = MetricsQueue.safetyWrap(func, ["hello"]);
       expect(returnValue).toEqual(null);
+    });
+
+    it("Calls the 'catchFN' (when supplied) and the passed function throws", () => {
+      const spy = jest.fn();
+      const func = (args: IArguments) =>
+        // force function to throw
+        (args as any).keyDoesntExist.thisAlsoDoesntExist;
+      MetricsQueue.safetyWrap(func, ["hello"], spy);
+      expect(spy).toHaveBeenCalledWith(
+        new TypeError("Cannot read properties of undefined (reading 'thisAlsoDoesntExist')")
+      );
     });
   });
 
   describe("Destroy:", () => {
-    it("It should reset hacked performance API methods", () => {
+    it("Should reset hacked performance API methods", () => {
       const mark = performance.mark;
       const measure = performance.measure;
       MetricsQueue.init();
@@ -414,7 +399,7 @@ describe("Metrics Queue:", () => {
       expect(performance.measure).toEqual(measure);
     });
 
-    it("It should reset all Metrics Queue statics", () => {
+    it("Should reset all Metrics Queue statics", () => {
       MetricsQueue.init();
       MetricsQueue.destroy();
       expect(MetricsQueue.enabled).toEqual(false);

@@ -1,10 +1,12 @@
+import type { MetricsQueue } from "./MetricsQueue";
+
 export type HashTable<T> = {
   [key: string]: T;
 };
 
 export type PerformanceMarkParameters = [mark: string, options: PerformanceMarkOptions];
 
-export type BustPerformanceMark = [PerformanceMark, ...PerformanceMarkParameters];
+export type BustPerformanceMark = [PerformanceMark | null, ...PerformanceMarkParameters];
 
 export type PerformanceMeasureParameters = [
   measure: string,
@@ -12,7 +14,7 @@ export type PerformanceMeasureParameters = [
   startMark: string | undefined
 ];
 
-export type BustPerformanceMeasure = [PerformanceMeasure, ...PerformanceMeasureParameters];
+export type BustPerformanceMeasure = [PerformanceMeasure | null, ...PerformanceMeasureParameters];
 
 export type BustPluginMetric = [string, ...any[]];
 
@@ -47,14 +49,16 @@ export type PluginOptions = {
 };
 
 export type InitConfig = {
-  onReady?: Function;
+  onReady?: (instance: MetricsQueue) => any;
   usePerformanceAPI?: boolean;
   plugins?: HashTable<PluginOptions>;
 };
 
 export type MetricEvent = {
-  listener: Function;
+  listener: Listener;
   keepAlive: boolean;
 };
 
-export type ListenerArguments = [event: string, callback: Function, keepAlive?: boolean];
+export type ListenerArguments = [event: string, callback: (...params: any[]) => any, keepAlive?: boolean];
+
+export type Listener = (...args: BustPluginMetric | BustPerformanceMark | BustPerformanceMeasure) => void;
