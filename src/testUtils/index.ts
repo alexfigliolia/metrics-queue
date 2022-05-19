@@ -1,7 +1,7 @@
 export class PerfLibMetric {
   name: string;
-  time: number = 0;
-  callbacks: Function[] = [];
+  time = 0;
+  callbacks: ((...args: any[]) => any)[] = [];
   constructor(name: string) {
     this.name = name;
   }
@@ -14,7 +14,7 @@ export class PerfLibMetric {
       callback(this);
     });
   }
-  subscribe(func: Function) {
+  subscribe(func: (...args: any[]) => any) {
     this.callbacks.push(func);
   }
 }

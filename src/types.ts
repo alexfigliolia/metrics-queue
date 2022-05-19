@@ -67,7 +67,7 @@ export type ListenerConfig = {
 export type IndexedListenerConfig = {
   passive: boolean;
   keepAlive: boolean;
-}
+};
 
 export type ListenerArguments = [event: string, callback: (...params: any[]) => any, config?: ListenerConfig];
 

@@ -95,29 +95,29 @@ Similar to native `eventListeners` in the browser `MetricsQueue.addEventListener
 const ID = MetricsQueue.addEventListener("event-name", callback, {
   passive: true,
   /*
-    Tells the MetricsQueue to run the callback after the current 
+    Tells the MetricsQueue to run the callback after the current
     callstack has cleared. This can be ideal in situations where
-    callbacks don't need to be "blocking". 
-    
-    Callbacks by default, will process asynchronously. This can be 
+    callbacks don't need to be "blocking".
+
+    Callbacks by default, will process asynchronously. This can be
     set to false when executing high-priority tasks in your callbacks
   */
   keepAlive: false
   /*
-    Tells the MetricsQueue that this event listener should not be 
+    Tells the MetricsQueue that this event listener should not be
     removed after it's called. When keepAlive is true, your callback
     will run each time the corresponding metric is reached - similar
     to that of a "click" event-handler on the DOM.
-    
-    When using keepAlive = true, eventListeners can be manually 
+
+    When using keepAlive = true, eventListeners can be manually
     removed using:
 
     MetricsQueue.removeEventListener("event-name", ID);
   */
 });
 ```
-If the Performance API is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes). If you are using an external or proprietary library for recording your metrics, the next section is for you.
 
+If the Performance API is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes). If you are using an external or proprietary library for recording your metrics, the next section is for you.
 
 #### Let's talk about other Performance Libraries
 
@@ -293,4 +293,3 @@ Frontend teams everywhere trade features for performance on a day-to-day basis. 
 If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate company goals or product features.
 
 In my own case, the need arose to definitively defer task execution behind performance measurements that were tracked by my team. The need for such granularity is what inspired the `MetricsQueue`.
-

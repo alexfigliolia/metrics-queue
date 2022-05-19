@@ -15,8 +15,14 @@ describe("Metric Indexer:", () => {
       const callback = () => {};
       metricIndexer.add(callback, { keepAlive: true, passive: true });
       metricIndexer.add(callback, { keepAlive: false, passive: false });
-      expect(metricIndexer.get("0")).toEqual({ listener: callback, config: { keepAlive: true, passive: true } });
-      expect(metricIndexer.get("1")).toEqual({ listener: callback, config: { keepAlive: false, passive: false } });
+      expect(metricIndexer.get("0")).toEqual({
+        listener: callback,
+        config: { keepAlive: true, passive: true },
+      });
+      expect(metricIndexer.get("1")).toEqual({
+        listener: callback,
+        config: { keepAlive: false, passive: false },
+      });
     });
 
     it("Returns the ID", () => {
@@ -48,7 +54,7 @@ describe("Metric Indexer:", () => {
   });
 
   describe("Bust:", () => {
-    it("Calls each of the callbacks in the queue",async () => {
+    it("Calls each of the callbacks in the queue", async () => {
       const callback = jest.fn();
       metricIndexer.add(callback);
       metricIndexer.add(callback);
@@ -65,7 +71,7 @@ describe("Metric Indexer:", () => {
       const metric = new PerfLibMetric("example-metric");
       metricIndexer.bust("example-metric", metric);
       await new Promise(process.nextTick);
-      expect(metricIndexer.size).toEqual(0);  
+      expect(metricIndexer.size).toEqual(0);
     });
   });
 

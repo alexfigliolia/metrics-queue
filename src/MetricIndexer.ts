@@ -27,14 +27,11 @@ export class MetricIndexer {
    * @param {Function} listener - a callback
    * @returns {string}
    */
-  public add(
-    listener: Listener, 
-    config: ListenerConfig = { keepAlive: false, passive: true }
-  ) {
+  public add(listener: Listener, config: ListenerConfig = { keepAlive: false, passive: true }) {
     const nextID = AutoIncrementingID.nextID.toString();
-    this.queue.set(nextID, { 
-      listener, 
-      config: Object.assign({ keepAlive: false, passive: true }, config) 
+    this.queue.set(nextID, {
+      listener,
+      config: Object.assign({ keepAlive: false, passive: true }, config),
     });
     return nextID;
   }
@@ -88,7 +85,7 @@ export class MetricIndexer {
         }
       }
     });
-    if(promises.length) {
+    if (promises.length) {
       await Promise.allSettled(promises);
     }
   }

@@ -204,14 +204,14 @@ export class MetricsQueue {
    *
    * @param {string} event - The name a performance.mark, measure, or external performance event
    * @param {Function} callback - A callback to run once your mark is reached
-   * @param {ListenerConfig} config - The config takes two optional paramenters - "passive" and "keepAlive" - 
+   * @param {ListenerConfig} config - The config takes two optional paramenters - "passive" and "keepAlive" -
    *    "passive": tells the MetricsQueue to run the callback after the current callstack has cleared. This
    *             can be ideal when your callbacks don't need to be run within 1ms of your metric being reached.
    *             It is true by default.
    *    "keepAlive": tells the MetricsQueue that this event listener should not be removed once called and instead
    *               be called each time the metric is reached. This behavior is mimical of "click" events on on the
    *               DOM as opposed to "onLoad" events on the window, which fire once.
-   *               It is false by default.                      
+   *               It is false by default.
    */
   public static addEventListener(event: string, callback: Listener, config?: ListenerConfig) {
     if (this.isDev) {

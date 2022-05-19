@@ -410,9 +410,7 @@ describe("Metrics Queue:", () => {
         // force function to throw
         (args as any).keyDoesntExist.thisAlsoDoesntExist;
       MetricsQueue.safetyWrap(func, ["hello"], spy);
-      expect(spy).toHaveBeenCalledWith(
-        new TypeError("Cannot read properties of undefined (reading 'thisAlsoDoesntExist')")
-      );
+      expect(spy.mock.calls[0][0] instanceof TypeError).toEqual(true);
     });
   });
 

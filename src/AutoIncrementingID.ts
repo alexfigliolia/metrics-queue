@@ -10,7 +10,7 @@
  * for the life of the table.
  */
 export class AutoIncrementingID {
-  private static incrementor: number = 0;
+  private static incrementor = 0;
 
   public static get nextID(): string {
     return (this.incrementor++).toString();
