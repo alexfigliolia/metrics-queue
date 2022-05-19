@@ -68,7 +68,7 @@ MetricsQueue.init();
 }
 ```
 
-##### Now that we've _initted_, let's talk event listening
+#### Now that we've _initted_, let's talk event listening
 
 There's a couple things to know here:
 
@@ -119,7 +119,7 @@ const ID = MetricsQueue.addEventListener("event-name", callback, {
 
 If the Performance API is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes). If you are using an external or proprietary library for recording your metrics, the next section is for you.
 
-#### Let's talk about other Performance Libraries
+### Let's talk about other Performance Libraries
 
 In many code-bases, you'll find custom Performance Monitoring tools. These tools may exist for reasons such as:
 
@@ -194,7 +194,7 @@ MetricsQueue.addEventListener("my-metric", (PerfMetric) => {
 });
 ```
 
-### Some Example Recipes
+## Some Example Recipes
 
 Run a lighter-weight process when performance is below a certain thresholds:
 
@@ -286,7 +286,7 @@ MetricsQueue.addEventListener("custom-metric", customMetric => {
 
 Feel free to submit PR's with more routines that worked for your project!
 
-### The backstory
+## The backstory
 
 Frontend teams everywhere trade features for performance on a day-to-day basis. As such, we dedicate ourselves to techniques such as code-splitting, serverside rendering, aggressive caching, and code compression - all, so we can have our cake, and eat it too.
 
