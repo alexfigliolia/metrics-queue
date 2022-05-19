@@ -56,9 +56,19 @@ export type InitConfig = {
 
 export type MetricEvent = {
   listener: Listener;
-  keepAlive: boolean;
+  config: IndexedListenerConfig;
 };
 
-export type ListenerArguments = [event: string, callback: (...params: any[]) => any, keepAlive?: boolean];
+export type ListenerConfig = {
+  passive?: boolean;
+  keepAlive?: boolean;
+};
+
+export type IndexedListenerConfig = {
+  passive: boolean;
+  keepAlive: boolean;
+}
+
+export type ListenerArguments = [event: string, callback: (...params: any[]) => any, config?: ListenerConfig];
 
 export type Listener = (...args: BustPluginMetric | BustPerformanceMark | BustPerformanceMeasure) => void;

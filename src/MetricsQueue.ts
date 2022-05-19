@@ -4,6 +4,7 @@ import type {
   HashTable,
   InitConfig,
   PluginOptions,
+  ListenerConfig,
   ListenerArguments,
   PerformanceMarkMethod,
   PerformanceMeasureMethod,
@@ -132,13 +133,13 @@ export class MetricsQueue {
    * @param {object | undefined} options - the options of a performance.mark
    * @param {PerformanceMark} performanceMark - the return value of the performance.mark
    */
-  private static onMark(
-    performanceMark: PerformanceMark | null, 
+  private static async onMark(
+    performanceMark: PerformanceMark | null,
     performanceMarkParams: PerformanceMarkParameters
-  ) {
+  ): Promise<void> {
     const [markName] = performanceMarkParams;
     if (markName in this.emitter) {
-      this.emitter[markName].bust(performanceMark, ...performanceMarkParams);
+      await this.emitter[markName].bust(performanceMark, ...performanceMarkParams);
       this.checkForEmptyIndexer(markName);
     }
   }
@@ -150,13 +151,13 @@ export class MetricsQueue {
    * @param {PerformanceMeasure} performanceMeasure - the return value of the performance.measure
    * @param {performanceMeasureParams} performanceMeasure - the options passed performance.measure
    */
-  private static onMeasure(
+  private static async onMeasure(
     performanceMeasure: PerformanceMeasure | null,
     performanceMeasureParams: PerformanceMeasureParameters
-  ) {
+  ): Promise<void> {
     const [measureName] = performanceMeasureParams;
     if (measureName in this.emitter) {
-      this.emitter[measureName].bust(performanceMeasure, ...performanceMeasureParams);
+      await this.emitter[measureName].bust(performanceMeasure, ...performanceMeasureParams);
       this.checkForEmptyIndexer(measureName);
     }
   }
@@ -168,9 +169,9 @@ export class MetricsQueue {
    * @param {string} metric - the name of a custom library's performance metric
    * @param {any[]} args - any parameters to be forward to subscriptions
    */
-  public static onPluginEvent(metric: string, ...args: any[]): void {
+  public static async onPluginEvent(metric: string, ...args: any[]): Promise<void> {
     if (metric in this.emitter) {
-      this.emitter[metric].bust(...args);
+      await this.emitter[metric].bust(...args);
       this.checkForEmptyIndexer(metric);
     }
   }
@@ -203,15 +204,19 @@ export class MetricsQueue {
    *
    * @param {string} event - The name a performance.mark, measure, or external performance event
    * @param {Function} callback - A callback to run once your mark is reached
-   * @param {Boolean} keepAlive - By default, event listeners on the MetricsQueue are cleaned up
-   *                              once they're fired. The "keepAlive" option allows a developer
-   *                              register listeners on events that are designed called multiple
-   *                              times
+   * @param {ListenerConfig} config - The config takes two optional paramenters - "passive" and "keepAlive" - 
+   *    "passive": tells the MetricsQueue to run the callback after the current callstack has cleared. This
+   *             can be ideal when your callbacks don't need to be run within 1ms of your metric being reached.
+   *             It is true by default.
+   *    "keepAlive": tells the MetricsQueue that this event listener should not be removed once called and instead
+   *               be called each time the metric is reached. This behavior is mimical of "click" events on on the
+   *               DOM as opposed to "onLoad" events on the window, which fire once.
+   *               It is false by default.                      
    */
-  public static addEventListener(event: string, callback: Listener, keepAlive?: boolean) {
+  public static addEventListener(event: string, callback: Listener, config?: ListenerConfig) {
     // TODO - document usage in readme
     if (this.isDev) {
-      this.validateListener(event, callback, keepAlive);
+      this.validateListener(event, callback, config);
     }
     if (event in this.emitter) {
       if (this.isDev) {
@@ -220,7 +225,7 @@ export class MetricsQueue {
     } else {
       this.emitter[event] = new MetricIndexer();
     }
-    return this.emitter[event].add(callback, keepAlive);
+    return this.emitter[event].add(callback, config);
   }
 
   /**
@@ -268,7 +273,11 @@ export class MetricsQueue {
    * @param {any[]} args - arguments to apply to the function
    * @param {Function} catchFN - an optional handler for caught errors
    */
-  public static safetyWrap(func: (...args: any[]) => any, args: any[] = [], catchFN?: (error: unknown) => any) {
+  public static safetyWrap(
+    func: (...args: any[]) => any,
+    args: any[] = [],
+    catchFN?: (error: unknown) => any
+  ) {
     try {
       return func(...args);
     } catch (e: unknown) {

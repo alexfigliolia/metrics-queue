@@ -1,5 +1,12 @@
 import { AutoIncrementingID } from "./AutoIncrementingID";
-import type { Listener, MetricEvent, BustPluginMetric, BustPerformanceMark, BustPerformanceMeasure } from "./types";
+import type {
+  Listener,
+  MetricEvent,
+  ListenerConfig,
+  BustPluginMetric,
+  BustPerformanceMark,
+  BustPerformanceMeasure,
+} from "./types";
 
 /**
  * Metric Indexer
@@ -20,9 +27,15 @@ export class MetricIndexer {
    * @param {Function} listener - a callback
    * @returns {string}
    */
-  public add(listener: Listener, keepAlive = false) {
+  public add(
+    listener: Listener, 
+    config: ListenerConfig = { keepAlive: false, passive: true }
+  ) {
     const nextID = AutoIncrementingID.nextID.toString();
-    this.queue.set(nextID, { listener, keepAlive });
+    this.queue.set(nextID, { 
+      listener, 
+      config: Object.assign({ keepAlive: false, passive: true }, config) 
+    });
     return nextID;
   }
 
@@ -55,13 +68,29 @@ export class MetricIndexer {
    *   BustPerformanceMeasure
    * } arguments - Forwarded from Metrics.queue[onMark | onMeasure] or MetricsQueue.plugins[pluginName]
    */
-  public bust(...params: BustPluginMetric | BustPerformanceMark | BustPerformanceMeasure) {
-    this.queue.forEach(({ listener, keepAlive }, id) => {
-      listener(...params);
-      if (!keepAlive) {
-        this.queue.delete(id);
+  public async bust(...params: BustPluginMetric | BustPerformanceMark | BustPerformanceMeasure) {
+    const promises: Promise<any>[] = [];
+    this.queue.forEach(({ listener, config: { passive, keepAlive } }, id) => {
+      if (passive) {
+        promises.push(
+          (async () => {
+            await Promise.resolve();
+            listener(...params);
+            if (!keepAlive) {
+              this.queue.delete(id);
+            }
+          })()
+        );
+      } else {
+        listener(...params);
+        if (!keepAlive) {
+          this.queue.delete(id);
+        }
       }
     });
+    if(promises.length) {
+      await Promise.allSettled(promises);
+    }
   }
 
   /**

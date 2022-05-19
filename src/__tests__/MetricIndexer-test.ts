@@ -13,10 +13,10 @@ describe("Metric Indexer:", () => {
   describe("Add:", () => {
     it("Adds a callback to the queue", () => {
       const callback = () => {};
-      metricIndexer.add(callback, true);
-      metricIndexer.add(callback, false);
-      expect(metricIndexer.get("0")).toEqual({ listener: callback, keepAlive: true });
-      expect(metricIndexer.get("1")).toEqual({ listener: callback, keepAlive: false });
+      metricIndexer.add(callback, { keepAlive: true, passive: true });
+      metricIndexer.add(callback, { keepAlive: false, passive: false });
+      expect(metricIndexer.get("0")).toEqual({ listener: callback, config: { keepAlive: true, passive: true } });
+      expect(metricIndexer.get("1")).toEqual({ listener: callback, config: { keepAlive: false, passive: false } });
     });
 
     it("Returns the ID", () => {
@@ -27,9 +27,9 @@ describe("Metric Indexer:", () => {
 
   describe("Remove:", () => {
     it("Removes callback from the queue", () => {
-      metricIndexer.add(() => {});
+      const ID = metricIndexer.add(() => {});
       expect(metricIndexer.size).toEqual(1);
-      metricIndexer.remove("0");
+      metricIndexer.remove(ID);
       expect(metricIndexer.size).toEqual(0);
     });
   });
@@ -43,27 +43,29 @@ describe("Metric Indexer:", () => {
       const callback = () => {};
       const ID = metricIndexer.add(callback);
       const returnValue = metricIndexer.get(ID);
-      expect(returnValue).toEqual({ listener: callback, keepAlive: false });
+      expect(returnValue).toEqual({ listener: callback, config: { keepAlive: false, passive: true } });
     });
   });
 
   describe("Bust:", () => {
-    it("Calls each of the callbacks in the queue", () => {
+    it("Calls each of the callbacks in the queue",async () => {
       const callback = jest.fn();
       metricIndexer.add(callback);
       metricIndexer.add(callback);
       metricIndexer.add(callback);
       const metric = new PerfLibMetric("example-metric");
       metricIndexer.bust("example-metric", metric);
+      await new Promise(process.nextTick);
       expect(callback).toHaveBeenCalledTimes(3);
     });
 
-    it("Empties the queue", () => {
+    it("Empties the queue", async () => {
       metricIndexer.add(() => {});
       expect(metricIndexer.size).toEqual(1);
       const metric = new PerfLibMetric("example-metric");
       metricIndexer.bust("example-metric", metric);
-      expect(metricIndexer.size).toEqual(0);
+      await new Promise(process.nextTick);
+      expect(metricIndexer.size).toEqual(0);  
     });
   });
 

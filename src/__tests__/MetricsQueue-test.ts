@@ -75,7 +75,7 @@ describe("Metrics Queue:", () => {
       MetricsQueue.init();
       const onMark = jest.spyOn(MetricsQueue as any, "onMark");
       const mark = performance.mark("example-mark");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       const [perfMark, params] = onMark.mock.calls[0];
       expect(perfMark).toEqual(mark);
       expect((params as PerformanceMarkParameters)[0]).toEqual("example-mark");
@@ -90,7 +90,7 @@ describe("Metrics Queue:", () => {
       MetricsQueue.addEventListener("example-mark", listenerSpy);
       const bustSpy = jest.spyOn(MetricsQueue["emitter"]["example-mark"], "bust");
       performance.mark("example-mark");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       expect(markSpy).toHaveBeenCalledTimes(1);
       expect(bustSpy).toHaveBeenCalledTimes(1);
       expect(listenerSpy).toHaveBeenCalledTimes(3);
@@ -111,7 +111,7 @@ describe("Metrics Queue:", () => {
       const onMeasure = jest.spyOn(MetricsQueue as any, "onMeasure");
       performance.mark("example-mark");
       const measure = performance.measure("example-measure", "example-mark");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       const [perfMeasure, params] = onMeasure.mock.calls[0];
       expect(perfMeasure).toEqual(measure);
       expect((params as PerformanceMeasureParameters)[0]).toEqual("example-measure");
@@ -125,7 +125,7 @@ describe("Metrics Queue:", () => {
       const bustQueue = jest.spyOn(MetricsQueue["emitter"]["example-measure"], "bust");
       performance.mark("example-mark");
       const measure = performance.measure("example-measure", "example-mark");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       const [perfMeasure, params] = onMeasure.mock.calls[0];
       expect(perfMeasure).toEqual(measure);
       const [measureName, markName] = params as PerformanceMeasureParameters;
@@ -142,7 +142,7 @@ describe("Metrics Queue:", () => {
       MetricsQueue.addEventListener("example-mark", () => {});
       const bustQueue = jest.spyOn(MetricsQueue["emitter"]["example-mark"], "bust");
       performance.mark("example-mark");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       expect(bustQueue).toHaveBeenCalledTimes(1);
     });
   });
@@ -157,7 +157,7 @@ describe("Metrics Queue:", () => {
       MetricsQueue.addEventListener("example-measure", listenerSpy);
       const bustSpy = jest.spyOn(MetricsQueue["emitter"]["example-measure"], "bust");
       performance.measure("example-measure");
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       expect(measureSpy).toHaveBeenCalledTimes(1);
       expect(bustSpy).toHaveBeenCalledTimes(1);
       expect(listenerSpy).toHaveBeenCalledTimes(3);
@@ -180,10 +180,11 @@ describe("Metrics Queue:", () => {
       expect(typeof MetricsQueue.plugins.onPerformanceLibraryEvent).toEqual("function");
     });
 
-    it("The callable should trigger MetricsQueue.onPluginEvent", () => {
+    it("The callable should trigger MetricsQueue.onPluginEvent", async () => {
       const callback = jest.fn();
       MetricsQueue.addEventListener("event", callback);
       MetricsQueue.plugins.onPerformanceLibraryEvent("event", {}, "stuff");
+      await Promise.resolve(process.nextTick);
       expect(callback).toHaveBeenCalledWith({}, "stuff");
     });
 
@@ -197,14 +198,37 @@ describe("Metrics Queue:", () => {
         },
       });
       const callback = jest.fn();
+      const spy = jest.spyOn(MetricsQueue, "onPluginEvent");
       MetricsQueue.addEventListener("event", callback);
       MetricsQueue.plugins.onPerformanceLibraryEvent("event", {}, "stuff");
       expect(callback).toHaveBeenCalledTimes(0);
       await Promise.resolve(process.nextTick);
+      expect(spy).toHaveBeenCalledTimes(1);
+      await Promise.resolve(process.nextTick);
       expect(callback).toHaveBeenCalledWith({}, "stuff");
     });
 
-    it("Should bust the queue when event listeners are present for declared plugins", () => {
+    it("Should bust the queue when event listeners are present for declared plugins", async () => {
+      const metric = new PerfLibMetric("example-metric");
+      metric.subscribe((instance: PerfLibMetric) => {
+        MetricsQueue.plugins.onPerformanceLibraryEvent(instance.name, instance);
+      });
+      const listenerSpy = jest.fn();
+      MetricsQueue.addEventListener("example-metric", listenerSpy, { passive: false });
+      MetricsQueue.addEventListener("example-metric", listenerSpy, { passive: false });
+      MetricsQueue.addEventListener("example-metric", listenerSpy, { passive: false });
+      const bustSpy = jest.spyOn(MetricsQueue["emitter"]["example-metric"], "bust");
+      metric.stop();
+      expect(bustSpy).toHaveBeenCalledTimes(1);
+      await Promise.resolve(process.nextTick);
+      expect(listenerSpy).toHaveBeenCalledTimes(3);
+      listenerSpy.mock.calls.forEach((args) => {
+        expect(args).toEqual([metric]);
+      });
+      expect(MetricsQueue["emitter"]["example-metric"]).toEqual(undefined);
+    });
+
+    it("Should bust the queue asynchronously when event listeners are present for declared plugins and passive is true", async () => {
       const metric = new PerfLibMetric("example-metric");
       metric.subscribe((instance: PerfLibMetric) => {
         MetricsQueue.plugins.onPerformanceLibraryEvent(instance.name, instance);
@@ -216,10 +240,15 @@ describe("Metrics Queue:", () => {
       const bustSpy = jest.spyOn(MetricsQueue["emitter"]["example-metric"], "bust");
       metric.stop();
       expect(bustSpy).toHaveBeenCalledTimes(1);
+      await Promise.resolve(process.nextTick);
       expect(listenerSpy).toHaveBeenCalledTimes(3);
       listenerSpy.mock.calls.forEach((args) => {
         expect(args).toEqual([metric]);
       });
+      // One tick for each event listener
+      await Promise.resolve(process.nextTick);
+      await Promise.resolve(process.nextTick);
+      await Promise.resolve(process.nextTick);
       expect(MetricsQueue["emitter"]["example-metric"]).toEqual(undefined);
     });
 
@@ -239,7 +268,7 @@ describe("Metrics Queue:", () => {
       const func = jest.fn();
       void MetricsQueue["processAfterCallStack"](func);
       expect(func).toHaveBeenCalledTimes(0);
-      await new Promise((process as any).nextTick);
+      await new Promise(process.nextTick);
       expect(func).toHaveBeenCalledTimes(1);
     });
   });
@@ -270,8 +299,8 @@ describe("Metrics Queue:", () => {
       MetricsQueue.init();
       const validate = jest.spyOn(MetricsQueue as any, "validateListener");
       const callback = () => {};
-      MetricsQueue.addEventListener("time-to-interactive", callback, false);
-      expect(validate).toHaveBeenCalledWith("time-to-interactive", callback, false);
+      MetricsQueue.addEventListener("time-to-interactive", callback);
+      expect(validate).toHaveBeenCalledWith("time-to-interactive", callback, undefined);
       process.env.NODE_ENV = env;
     });
 
