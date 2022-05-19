@@ -57,6 +57,13 @@ export class MetricsQueue {
     }
   }
 
+  /**
+   * Create event emitters designed for usage with external libraries
+   * * For internal use only
+   *
+   * @param {HashTable<PluginOptions>} plugins - A list of methods to expose as well as how to handle callback
+   *                                             callback executions
+   */
   private static registerPlugins(plugins: HashTable<PluginOptions>) {
     for (const plug in plugins) {
       const { processAfterCallStack } = plugins[plug];
@@ -125,7 +132,10 @@ export class MetricsQueue {
    * @param {object | undefined} options - the options of a performance.mark
    * @param {PerformanceMark} performanceMark - the return value of the performance.mark
    */
-  private static onMark(performanceMark: PerformanceMark | null, performanceMarkParams: PerformanceMarkParameters) {
+  private static onMark(
+    performanceMark: PerformanceMark | null, 
+    performanceMarkParams: PerformanceMarkParameters
+  ) {
     const [markName] = performanceMarkParams;
     if (markName in this.emitter) {
       this.emitter[markName].bust(performanceMark, ...performanceMarkParams);
@@ -160,7 +170,7 @@ export class MetricsQueue {
    */
   public static onPluginEvent(metric: string, ...args: any[]): void {
     if (metric in this.emitter) {
-      this.emitter[metric].bust(metric, ...args);
+      this.emitter[metric].bust(...args);
       this.checkForEmptyIndexer(metric);
     }
   }
@@ -199,6 +209,7 @@ export class MetricsQueue {
    *                              times
    */
   public static addEventListener(event: string, callback: Listener, keepAlive?: boolean) {
+    // TODO - document usage in readme
     if (this.isDev) {
       this.validateListener(event, callback, keepAlive);
     }

@@ -184,7 +184,7 @@ describe("Metrics Queue:", () => {
       const callback = jest.fn();
       MetricsQueue.addEventListener("event", callback);
       MetricsQueue.plugins.onPerformanceLibraryEvent("event", {}, "stuff");
-      expect(callback).toHaveBeenCalledWith("event", {}, "stuff");
+      expect(callback).toHaveBeenCalledWith({}, "stuff");
     });
 
     it("The callable should trigger MetricsQueue.onPluginEvent after the current callstack when 'processAfterCallStack' is true", async () => {
@@ -201,7 +201,7 @@ describe("Metrics Queue:", () => {
       MetricsQueue.plugins.onPerformanceLibraryEvent("event", {}, "stuff");
       expect(callback).toHaveBeenCalledTimes(0);
       await Promise.resolve(process.nextTick);
-      expect(callback).toHaveBeenCalledWith("event", {}, "stuff");
+      expect(callback).toHaveBeenCalledWith({}, "stuff");
     });
 
     it("Should bust the queue when event listeners are present for declared plugins", () => {
@@ -218,7 +218,7 @@ describe("Metrics Queue:", () => {
       expect(bustSpy).toHaveBeenCalledTimes(1);
       expect(listenerSpy).toHaveBeenCalledTimes(3);
       listenerSpy.mock.calls.forEach((args) => {
-        expect(args).toEqual(["example-metric", metric]);
+        expect(args).toEqual([metric]);
       });
       expect(MetricsQueue["emitter"]["example-metric"]).toEqual(undefined);
     });

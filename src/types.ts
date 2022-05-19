@@ -16,7 +16,7 @@ export type PerformanceMeasureParameters = [
 
 export type BustPerformanceMeasure = [PerformanceMeasure | null, ...PerformanceMeasureParameters];
 
-export type BustPluginMetric = [string, ...any[]];
+export type BustPluginMetric = any[];
 
 export type MarkParameters = [
   startMark: PerformanceMark,

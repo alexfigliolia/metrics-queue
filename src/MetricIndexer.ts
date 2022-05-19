@@ -65,7 +65,7 @@ export class MetricIndexer {
   }
 
   /**
-   * Get the cardinality of the queue
+   * Get the size of the queue
    */
   get size() {
     return this.queue.size;
