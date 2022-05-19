@@ -12,8 +12,8 @@ const noDeclarationFiles = { compilerOptions: { declaration: false } };
 
 const babelRuntimeVersion = pkg.dependencies["@babel/runtime"].replace(/^[^0-9]*/, "");
 
-const external = [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})].map((name) =>
-  RegExp(`^${name}($|/)`)
+const external = [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})].map(
+  (name) => RegExp(`^${name}($|/)`)
 );
 
 // eslint-disable-next-line import/no-default-export
@@ -27,12 +27,13 @@ export default defineConfig([
       nodeResolve({
         extensions,
       }),
-      typescript({ useTsconfigDeclarationDir: true }),
+      typescript({
+        tsconfig: "tsconfig.build.json",
+        useTsconfigDeclarationDir: true,
+      }),
       babel({
         extensions,
-        plugins: [
-          ["@babel/plugin-transform-runtime", { version: babelRuntimeVersion }],
-        ],
+        plugins: [["@babel/plugin-transform-runtime", { version: babelRuntimeVersion }]],
         babelHelpers: "runtime",
       }),
     ],
@@ -47,12 +48,13 @@ export default defineConfig([
       nodeResolve({
         extensions,
       }),
-      typescript({ tsconfigOverride: noDeclarationFiles }),
+      typescript({
+        tsconfig: "tsconfig.build.json",
+        tsconfigOverride: noDeclarationFiles,
+      }),
       babel({
         extensions,
-        plugins: [
-          ["@babel/plugin-transform-runtime", { version: babelRuntimeVersion, useESModules: true }],
-        ],
+        plugins: [["@babel/plugin-transform-runtime", { version: babelRuntimeVersion, useESModules: true }]],
         babelHelpers: "runtime",
       }),
     ],
@@ -70,7 +72,10 @@ export default defineConfig([
         preventAssignment: true,
         "process.env.NODE_ENV": JSON.stringify("production"),
       }),
-      typescript({ tsconfigOverride: noDeclarationFiles }),
+      typescript({
+        tsconfig: "tsconfig.build.json",
+        tsconfigOverride: noDeclarationFiles,
+      }),
       babel({
         extensions,
         exclude: "node_modules/**",
@@ -100,7 +105,10 @@ export default defineConfig([
       nodeResolve({
         extensions,
       }),
-      typescript({ tsconfigOverride: noDeclarationFiles }),
+      typescript({
+        tsconfig: "tsconfig.build.json",
+        tsconfigOverride: noDeclarationFiles,
+      }),
       babel({
         extensions,
         exclude: "node_modules/**",
@@ -126,7 +134,10 @@ export default defineConfig([
       nodeResolve({
         extensions,
       }),
-      typescript({ tsconfigOverride: noDeclarationFiles }),
+      typescript({
+        tsconfig: "tsconfig.build.json",
+        tsconfigOverride: noDeclarationFiles,
+      }),
       babel({
         extensions,
         exclude: "node_modules/**",

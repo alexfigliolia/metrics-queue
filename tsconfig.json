@@ -17,5 +17,5 @@
     "baseUrl": "./"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist",  "**/__tests__/*",  "**/testUtils/*"]
+  "exclude": ["node_modules", "dist"]
 }

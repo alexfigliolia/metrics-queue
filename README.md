@@ -1,10 +1,10 @@
 # Metrics Queue
 
-### Purpose
+## Purpose
 
 The Metrics Queue allows you to subscribe performance marks and measures for the purpose of performance-tuning with the highest possible granularity.
 
-#### Why do metrics need a subscription model?
+### Why do metrics need a subscription model?
 
 The idea behind the Metrics Queue is to deliver the fastest possible user experience regardless of environment or device. By treating your performance marks and measures as subscriptables, you can:
 
@@ -13,7 +13,7 @@ The idea behind the Metrics Queue is to deliver the fastest possible user experi
 3. Explicitly defer expensive tasks behind high-priority operations
 4. Create task execution phases based on the needs of your product
 
-#### Let's talk getting setup:
+#### Let's talk getting setup
 
 Before using the MetricsQueue, you have to initialize it:
 
@@ -68,7 +68,7 @@ MetricsQueue.init();
 }
 ```
 
-##### Now that we've _initted_, let's talk event listening!
+##### Now that we've _initted_, let's talk event listening
 
 There's a couple things to know here:
 
@@ -194,9 +194,9 @@ MetricsQueue.addEventListener("my-metric", (PerfMetric) => {
 });
 ```
 
-### Some Example Recipes:
+### Some Example Recipes
 
-1. Run a lighter-weight process when performance is below a certain thresholds:
+Run a lighter-weight process when performance is below a certain thresholds:
 
 ```JavaScript
 // Somewhere in your application code
@@ -225,7 +225,7 @@ MetricsQueue.addEventListener("first-meaningful-paint", FMP => {
 });
 ```
 
-2. Render some offscreen content after interactivity is reached:
+Render some offscreen content after interactivity is reached:
 
 ```JavaScript
 // Somewhere in your application code
@@ -254,7 +254,7 @@ export const AwesomeComponent = () => {
 }
 ```
 
-3. Load a secondary experience after a custom performance metric is reached:
+Load a secondary experience after a custom performance metric is reached:
 
 ```JavaScript
 // Somewhere in your application code
