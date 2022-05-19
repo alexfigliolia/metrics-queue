@@ -1,6 +1,6 @@
 {
   "name": "metrics-queue",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "The Metrics Queue allows developers to react performance.marks and measures for the purpose of performance-tuning against performance goals",
   "main": "lib/metrics-queue.js",
   "unpkg": "dist/metrics-queue.js",
@@ -95,7 +95,7 @@
   "npmName": "metrics-queue",
   "npmFileMap": [
     {
-      "basePath": "/lib/",
+      "basePath": "/dist/",
       "files": [
         "*.js"
       ]
