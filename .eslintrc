@@ -1,11 +1,10 @@
 {
   "parser": "@typescript-eslint/parser",
   "extends": [
+    "eslint:recommended",
     "eslint-config-airbnb-base/rules/es6",
     "plugin:jest/recommended",
     "plugin:prettier/recommended",
-    "plugin:typescript-compat/recommended",
-    "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
@@ -44,11 +43,5 @@
   },
   "parserOptions": {
     "project": "./tsconfig.json"
-  },
-  "polyfills": [
-    "Promise.prototype.then",
-    "Promise.prototype.catch",
-    "Promise.prototype.resolve",
-    "Promise.prototype.allSettled"
-  ]
+  }
 }
