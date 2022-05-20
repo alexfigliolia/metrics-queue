@@ -293,3 +293,7 @@ Frontend teams everywhere trade features for performance on a day-to-day basis. 
 If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate company goals or product features.
 
 In my own case, the need arose to definitively defer task execution behind performance measurements that were tracked by my team. The need for such granularity is what inspired the `MetricsQueue`.
+
+## Contributing
+
+All contributions and PR's are welcome for this project. Please feel free to open issues, discuss architectural decisions, and help advance the project
