@@ -259,7 +259,7 @@ export const AwesomeComponent = () => {
 }
 ```
 
-If this is the flavor of code you're writing these days, please feel free to checkout our [React Utilities](https://github.com/alexfigliolia/metrics-queue-react#readme). They make operations such this one, a breeze.
+If this is the flavor of code you're writing these days, please feel free to checkout our [React Utilities](https://github.com/alexfigliolia/metrics-queue-react#readme). They make operations such this one a breeze.
 
 Using an external Performance monitoring library, load a secondary experience after a "custom-metric" is reached:
 
