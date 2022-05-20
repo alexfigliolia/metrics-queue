@@ -1,19 +1,20 @@
 # Metrics Queue
 
-## Purpose
+The Metrics Queue allows you to treat your performance marks and measures as subscribable events!
 
-The Metrics Queue allows you to subscribe performance marks and measures for the purpose of performance-tuning with the highest possible granularity.
+By creating subscriptions to your performance markers, you can take fine-grained control over task execution and adjust routines at runtime for users experiencing fast or slow performance.
 
-### Why do metrics need a subscription model?
+## Installation
 
-The idea behind the Metrics Queue is to deliver the fastest possible user experience regardless of environment or device. By treating your performance marks and measures as subscriptables, you can:
+```bash
+npm i -S metrics-queue
+# or
+yarn add metrics-queue
+# or
+bolt add metrics-queue
+```
 
-1. Adapt to your metrics at runtime
-2. Create explicit routines for high vs. low performance scenarios
-3. Explicitly defer expensive tasks behind high-priority operations
-4. Create task execution phases based on the needs of your product
-
-#### Let's talk getting setup
+### Getting Started
 
 Before using the MetricsQueue, you have to initialize it:
 
@@ -21,7 +22,7 @@ Before using the MetricsQueue, you have to initialize it:
 import { MetricsQueue } from "metrics-queue";
 
 MetricsQueue.init();
-// Bam...off to the races
+// off to the races
 ```
 
 `MetricsQueue.init` accepts an optional configuration object:
@@ -38,9 +39,9 @@ MetricsQueue.init();
   usePerformanceAPI: true,
   /*
     This option can be used to enable or disable the MetricsQueue from allowing
-    listeners to be registered on Performance API marks and measures.
+    listeners to be registered on `Performance API` marks and measures.
 
-    If your app is using something other than the Performance API to track metrics,
+    If your app is using something other than the `Performance API` to track metrics,
     you can switch this option to false
   */
  plugins: {
@@ -49,17 +50,18 @@ MetricsQueue.init();
    }
  }
  /*
-    Plugins are the MetricsQueue's way of supporting other performance metric
-    libraries the same way it does the Performance API.
+    Plugins are the MetricsQueue's way of supporting other performance
+    libraries the same way it does the `Performance API`.
 
     If you are tracking performance metrics in your app without the Performance
-    API, simply create an entry on the plugins object with any name you wish
+    API, simply create an entry on the plugins object. Ideally, one
+    entry for each performance library you wish to subscribe to.
 
     You'll then be able to emit events using:
 
     MetricsQueue.plugins.yourPluginName("your-event");
 
-    and listen to the events using:
+    and register event listeners using:
 
     MetricsQueue.addEventListener("your-event", () => {});
 
@@ -68,24 +70,23 @@ MetricsQueue.init();
 }
 ```
 
-#### Now that we've _initted_, let's talk event listening
+#### Now that we've _initted_, let's talk about event listening
 
 There's a couple things to know here:
 
-First, if your application is already using the native Performance API's marks and measures, then `MetricsQueue.init()` is all you need to start subscribing to your metrics.
+First, if your application is already using the native `Performance API`'s marks and measures, then `MetricsQueue.init()` is all you need to start subscribing to your metrics.
 
 Simply add event listeners like this from anywhere in your code:
 
 ```JavaScript
 // Somewhere in your app:
 performance.mark("example-mark");
-// ...
 
-// Anywhere else:
+// Somewhere else in your app:
 import { MetricsQueue } from "metrics-queue";
 
 MetricsQueue.addEventListener("example-mark", (performanceMark, ...markOptions) => {
-  // Do great things in here
+  // Run reactionary routines to that performance.mark
 });
 ```
 
@@ -113,17 +114,21 @@ const ID = MetricsQueue.addEventListener("event-name", callback, {
     removed using:
 
     MetricsQueue.removeEventListener("event-name", ID);
+
+    By default, keepAlive is false
   */
 });
 ```
 
-If the Performance API is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes). If you are using an external or proprietary library for recording your metrics, the next section is for you.
+If the `Performance API` is the backbone of recording performance metrics in your project, please feel free to skip to the [Examples](#some-example-recipes) section. There are a few recipes designed to spur some thoughts on how to integrate the `MetricsQueue` into a process or feature within your app.
+
+If you are using an external or proprietary library for recording your metrics, the next section is for you.
 
 ### Let's talk about other Performance Libraries
 
 In many code-bases, you'll find custom Performance Monitoring tools. These tools may exist for reasons such as:
 
-1. Monitoring performance before the Performance API was widely supported
+1. Monitoring performance before the `Performance API` was widely supported
 2. Sending monitoring data to external API's
 3. Creating monitoring implementations that more closely align with features and product goals
 
@@ -145,7 +150,7 @@ MetricsQueue.init({
 Creating entries on the plugins object tells the MetricsQueue to do the following:
 
 1. Expose the `onProprietaryEvent` method. You'll invoke this method whenever a metric from your performance library completes
-2. The `processAfterCallStack` option tells the `MetricsQueue` to execute all your event listeners _after_ the current callstack has cleared. This allows for your callbacks to be non-blocking
+2. The `processAfterCallStack` option tells the `MetricsQueue` to execute all your event listeners _after_ the current callstack has cleared. This can allow for your callbacks to be non-blocking
 
 Let's look at a working example using a fictional performance library:
 
@@ -196,7 +201,7 @@ MetricsQueue.addEventListener("my-metric", (PerfMetric) => {
 
 ## Some Example Recipes
 
-Run a lighter-weight process when performance is below a certain thresholds:
+Use the `MetricsQueue` to run a lighter-weight process when performance is below a certain thresholds:
 
 ```JavaScript
 // Somewhere in your application code
@@ -225,11 +230,11 @@ MetricsQueue.addEventListener("first-meaningful-paint", FMP => {
 });
 ```
 
-Render some offscreen content after interactivity is reached:
+Using the UI library of your choice, render some offscreen content after interactivity is reached:
 
 ```JavaScript
 // Somewhere in your application code
-const measure = performance.measure("interactivity", "some-start-mark");
+const measure = performance.measure("feature-interactive", "some-start-mark");
 
 // In any other module
 import { MetricsQueue } from "metrics-queue";
@@ -238,11 +243,11 @@ import { MetricsQueue } from "metrics-queue";
 export const AwesomeComponent = () => {
   const [eventEmitted, setEventEmitted] = useState(false);
   useEffect(() => {
-    const listenerID = MetricsQueue.addEventListener("interactivity", () => {
+    const listenerID = MetricsQueue.addEventListener("feature-interactive", () => {
       setEventEmitted(true);
     });
     return () => {
-      MetricsQueue.removeEventListener("interactivity", listenerID);
+      MetricsQueue.removeEventListener("feature-interactive", listenerID);
     };
   }, []);
   if(eventEmitted) {
@@ -254,7 +259,9 @@ export const AwesomeComponent = () => {
 }
 ```
 
-Load a secondary experience after a custom performance metric is reached:
+If this is the flavor of code you're writing these days, please feel free to checkout our [React Utilities](https://github.com/alexfigliolia/metrics-queue-react#readme). They make operations such this one, a breeze.
+
+Using an external Performance monitoring library, load a secondary experience after a "custom-metric" is reached:
 
 ```JavaScript
 // Somewhere in your application code
@@ -272,9 +279,9 @@ import { MetricsQueue } from "metrics-queue";
 
 MetricsQueue.addEventListener("custom-metric", customMetric => {
   if(customMetric.stopTime < 500) {
-    // If the user experienced a fast execution for example-metric,
+    // If the user experiencing a fast runtime execution of "custom-metric",
     // lets preload an additional feature that would normally require
-    // a certain user interaction before loading
+    // a user interaction before fetching
     loadSecondaryExperience();
   } else {
     // The user experienced a slow execution for example-metric, so
@@ -284,7 +291,33 @@ MetricsQueue.addEventListener("custom-metric", customMetric => {
 });
 ```
 
-Feel free to submit PR's with more routines that worked for your project!
+Make assertions on performance metrics during integration tests
+
+```JavaScript
+// in your app
+import { MetricsQueue } from "metrics-queue";
+
+MetricsQueue.init();
+window.__METRICS_QUEUE = MetricsQueue;
+// .... When the home page becomes interactive
+performance.mark("home-page-interactive");
+
+// in your test file
+it("The home-page becomes interactive in less than 5 seconds", () => {
+  cy.visit("www.your-app.com/home", {
+    onBeforeLoad: $win => {
+      $win.__METRICS_QUEUE.addEventListener(
+        "home-page-interactive",
+        (metric) => {
+          expect(metric.duration < 5000).equals(true);
+        }
+      )
+    }
+  })
+});
+```
+
+Feel free to submit PR's with more routines that improved performance in your project!
 
 ## The backstory
 
@@ -292,7 +325,7 @@ Frontend teams everywhere trade features for performance on a day-to-day basis. 
 
 If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate company goals or product features.
 
-In my own case, the need arose to definitively defer task execution behind performance measurements that were tracked by my team. The need for such granularity is what inspired the `MetricsQueue`.
+The need for such granularity is what inspired the `MetricsQueue`
 
 ## Contributing
 
