@@ -39,9 +39,9 @@ MetricsQueue.init();
   usePerformanceAPI: true,
   /*
     This option can be used to enable or disable the MetricsQueue from allowing
-    listeners to be registered on `Performance API` marks and measures.
+    listeners to be registered on Performance API marks and measures.
 
-    If your app is using something other than the `Performance API` to track metrics,
+    If your app is using something other than the Performance API to track metrics,
     you can switch this option to false
   */
  plugins: {
@@ -51,7 +51,7 @@ MetricsQueue.init();
  }
  /*
     Plugins are the MetricsQueue's way of supporting other performance
-    libraries the same way it does the `Performance API`.
+    libraries the same way it does the Performance API.
 
     If you are tracking performance metrics in your app without the Performance
     API, simply create an entry on the plugins object. Ideally, one
@@ -81,12 +81,14 @@ Simply add event listeners like this from anywhere in your code:
 ```JavaScript
 // Somewhere in your app:
 performance.mark("example-mark");
+// or 
+performance.measure("example-measure", /*...args*/);
 
 // Somewhere else in your app:
 import { MetricsQueue } from "metrics-queue";
 
 MetricsQueue.addEventListener("example-mark", (performanceMark, ...markOptions) => {
-  // Run reactionary routines to that performance.mark
+  // Run reactionary routines to that performance.mark or performance.measure
 });
 ```
 
@@ -234,7 +236,7 @@ Using the UI library of your choice, render some offscreen content after interac
 
 ```JavaScript
 // Somewhere in your application code
-const measure = performance.measure("feature-interactive", "some-start-mark");
+performance.measure("feature-interactive", "some-start-mark");
 
 // In any other module
 import { MetricsQueue } from "metrics-queue";
@@ -304,7 +306,7 @@ performance.mark("home-page-interactive");
 
 // in your test file
 it("The home-page becomes interactive in less than 5 seconds", () => {
-  cy.visit("www.your-app.com/home", {
+  cy.visit("www.your-app.com/home", { // Or selenium, webdriver, or puppeteer 
     onBeforeLoad: $win => {
       $win.__METRICS_QUEUE.addEventListener(
         "home-page-interactive",
@@ -323,7 +325,7 @@ Feel free to submit PR's with more routines that improved performance in your pr
 
 Frontend teams everywhere trade features for performance on a day-to-day basis. As such, we dedicate ourselves to techniques such as code-splitting, serverside rendering, aggressive caching, and code compression - all, so we can have our cake, and eat it too.
 
-If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate company goals or product features.
+If you're anything like me, you've worked on products that take full advantage of these techniques, but still require even more granular performance optimizations to accommodate the goals of the product or quirky individual features.
 
 The need for such granularity is what inspired the `MetricsQueue`
 

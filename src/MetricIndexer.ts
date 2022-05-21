@@ -25,7 +25,7 @@ export class MetricIndexer {
    * Add and index an event listener callback
    *
    * @param {Function} listener - a callback
-   * @returns {string}
+   * @returns {string} ID - an identifier that can be used to remove the listener
    */
   public add(listener: Listener, config: ListenerConfig = { keepAlive: false, passive: true }) {
     const nextID = AutoIncrementingID.nextID.toString();
