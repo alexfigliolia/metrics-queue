@@ -81,7 +81,7 @@ Simply add event listeners like this from anywhere in your code:
 ```JavaScript
 // Somewhere in your app:
 performance.mark("example-mark");
-// or 
+// or
 performance.measure("example-measure", /*...args*/);
 
 // Somewhere else in your app:
@@ -306,7 +306,7 @@ performance.mark("home-page-interactive");
 
 // in your test file
 it("The home-page becomes interactive in less than 5 seconds", () => {
-  cy.visit("www.your-app.com/home", { // Or selenium, webdriver, or puppeteer 
+  cy.visit("www.your-app.com/home", { // Or selenium, webdriver, or puppeteer
     onBeforeLoad: $win => {
       $win.__METRICS_QUEUE.addEventListener(
         "home-page-interactive",
