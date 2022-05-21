@@ -1,6 +1,6 @@
 {
   "name": "metrics-queue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Metrics Queue allows developers to react performance.marks and measures for the purpose of performance-tuning against performance goals",
   "main": "lib/metrics-queue.js",
   "unpkg": "dist/metrics-queue.js",
