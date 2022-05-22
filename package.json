@@ -35,6 +35,16 @@
     "url": "git+https://github.com/alexfigliolia/metrics-queue.git"
   },
   "keywords": [
+    "task",
+    "mark",
+    "measure",
+    "event",
+    "emitter",
+    "metric",
+    "priority",
+    "listeners",
+    "subscribe",
+    "pubsub",
     "performance",
     "performance API"
   ],
